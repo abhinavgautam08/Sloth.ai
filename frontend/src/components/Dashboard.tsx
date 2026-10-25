@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { gsap } from 'gsap';
 import { 
   FileText, 
   FolderTree, 
@@ -16,15 +18,71 @@ interface DashboardProps {
   aiStatus: AIStatus | null;
 }
 
+import type { Variants } from 'framer-motion';
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 260,
+      damping: 24,
+    },
+  },
+};
+
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) => {
   const isOnline = aiStatus?.ollama_available;
   const isModelReady = aiStatus?.model_available;
+  const heroGlowRef = useRef<HTMLDivElement>(null);
+  const heroCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!heroGlowRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.to(heroGlowRef.current, {
+        scale: 1.3,
+        opacity: 0.45,
+        duration: 3.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+    }, heroCardRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-950 border border-amber-500/20 p-8 shadow-xl shadow-black/40">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
+      <motion.div 
+        ref={heroCardRef}
+        variants={itemVariants}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-950 border border-amber-500/20 p-8 shadow-xl shadow-black/40"
+      >
+        <div 
+          ref={heroGlowRef}
+          className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" 
+        />
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300 text-xs font-semibold mb-4">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -42,30 +100,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
           </p>
 
           <div className="mt-6 flex flex-wrap gap-4">
-            <button
+            <motion.button
               onClick={() => onNavigate('documents')}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-400 text-zinc-950 font-bold hover:bg-amber-300 transition-all shadow-lg shadow-amber-400/20 text-sm cursor-pointer"
+              whileHover={{ scale: 1.03, boxShadow: '0 10px 25px -5px rgba(251, 191, 36, 0.3)' }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-400 text-zinc-950 font-bold hover:bg-amber-300 transition-colors shadow-lg shadow-amber-400/20 text-sm cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               <span>Launch Document Assistant</span>
               <ArrowRight className="w-4 h-4 ml-1" />
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={() => onNavigate('organizer')}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium border border-zinc-700 transition-all text-sm cursor-pointer"
+              whileHover={{ scale: 1.03, borderColor: 'rgba(251, 191, 36, 0.4)' }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium border border-zinc-700 transition-colors text-sm cursor-pointer"
             >
               <FolderTree className="w-4 h-4 text-amber-400" />
               <span>Organize Local Files</span>
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Status & Capabilities Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Local AI Engine Tile */}
-        <div className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 hover:border-amber-500/20 transition-all">
+        <motion.div 
+          variants={itemVariants}
+          whileHover={{ y: -4, borderColor: 'rgba(251, 191, 36, 0.3)' }}
+          className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Local AI Engine</span>
             <Cpu className="w-4 h-4 text-amber-400" />
@@ -85,10 +151,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
             <span>Runtime</span>
             <span className="text-zinc-300 font-mono">Ollama Local</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Document Assistant Tile */}
-        <div className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 hover:border-amber-500/20 transition-all">
+        <motion.div 
+          variants={itemVariants}
+          whileHover={{ y: -4, borderColor: 'rgba(251, 191, 36, 0.3)' }}
+          className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Document Parser</span>
             <FileText className="w-4 h-4 text-amber-400" />
@@ -101,10 +171,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
             <span>Size Limit</span>
             <span className="text-zinc-300 font-mono">10 MB max</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* File Organizer Tile */}
-        <div className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 hover:border-amber-500/20 transition-all">
+        <motion.div 
+          variants={itemVariants}
+          whileHover={{ y: -4, borderColor: 'rgba(251, 191, 36, 0.3)' }}
+          className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Safety Guard</span>
             <FolderTree className="w-4 h-4 text-amber-400" />
@@ -117,10 +191,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
             <span>Conflicts</span>
             <span className="text-zinc-300 font-mono">Auto-rename (1)</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Privacy Shield Tile */}
-        <div className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 hover:border-amber-500/20 transition-all">
+        <motion.div 
+          variants={itemVariants}
+          whileHover={{ y: -4, borderColor: 'rgba(251, 191, 36, 0.3)' }}
+          className="rounded-xl bg-zinc-900/60 border border-white/5 p-5 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Privacy Shield</span>
             <ShieldCheck className="w-4 h-4 text-amber-400" />
@@ -133,12 +211,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
             <span>Network</span>
             <span className="text-zinc-300 font-mono">100% Localhost</span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Model Setup Banner if offline */}
       {!isModelReady && (
-        <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <motion.div 
+          variants={itemVariants}
+          className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
           <div className="flex items-start space-x-3">
             <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div>
@@ -150,19 +231,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
               </p>
             </div>
           </div>
-          <button
+          <motion.button
             onClick={() => onNavigate('settings')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             className="px-4 py-2 rounded-lg bg-amber-400 text-zinc-950 text-xs font-bold hover:bg-amber-300 shrink-0 cursor-pointer"
           >
             Open Setup Guide
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {/* Feature Highlights Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Document Workflow Card */}
-        <div className="rounded-xl bg-zinc-900/40 border border-white/5 p-6 hover:border-amber-500/20 transition-all flex flex-col justify-between">
+        <motion.div 
+          variants={itemVariants}
+          whileHover={{ y: -4, borderColor: 'rgba(251, 191, 36, 0.25)' }}
+          className="rounded-xl bg-zinc-900/40 border border-white/5 p-6 transition-colors flex flex-col justify-between"
+        >
           <div>
             <div className="w-10 h-10 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400 mb-4">
               <FileText className="w-5 h-5" />
@@ -195,10 +282,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* File Organizer Card */}
-        <div className="rounded-xl bg-zinc-900/40 border border-white/5 p-6 hover:border-amber-500/20 transition-all flex flex-col justify-between">
+        <motion.div 
+          variants={itemVariants}
+          whileHover={{ y: -4, borderColor: 'rgba(251, 191, 36, 0.25)' }}
+          className="rounded-xl bg-zinc-900/40 border border-white/5 p-6 transition-colors flex flex-col justify-between"
+        >
           <div>
             <div className="w-10 h-10 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400 mb-4">
               <FolderTree className="w-5 h-5" />
@@ -231,8 +322,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, aiStatus }) =>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };

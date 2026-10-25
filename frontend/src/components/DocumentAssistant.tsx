@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
   FileText, 
@@ -260,9 +261,11 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({ aiStatus }
                 const Icon = m.icon;
                 const active = mode === m.id;
                 return (
-                  <button
+                  <motion.button
                     key={m.id}
                     onClick={() => setMode(m.id)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className={`flex flex-col text-left p-3 rounded-lg border transition-all text-xs cursor-pointer ${
                       active
                         ? 'bg-amber-500/10 border-amber-500/40 text-amber-200 shadow-sm shadow-amber-500/5'
@@ -274,7 +277,7 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({ aiStatus }
                       <span>{m.label}</span>
                     </div>
                     <span className="mt-1 text-[11px] text-zinc-500 leading-normal">{m.desc}</span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -293,9 +296,11 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({ aiStatus }
             )}
 
             <div className="pt-2 flex justify-end">
-              <button
+              <motion.button
                 onClick={handleSummarize}
                 disabled={!extractedData || isSummarizing || !isModelReady}
+                whileHover={extractedData && !isSummarizing && isModelReady ? { scale: 1.03 } : {}}
+                whileTap={extractedData && !isSummarizing && isModelReady ? { scale: 0.97 } : {}}
                 className={`inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
                   !extractedData || isSummarizing || !isModelReady
                     ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
@@ -304,91 +309,115 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({ aiStatus }
               >
                 <Sparkles className="w-4 h-4" />
                 <span>{isSummarizing ? 'Synthesizing with Local LLM...' : 'Generate Insights'}</span>
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {/* Results Box */}
-          {summaryResult && (
-            <div className="rounded-xl bg-zinc-900/60 border border-amber-500/30 p-6 space-y-4 shadow-xl shadow-black/40">
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/5">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-semibold text-white">AI Analysis Output</span>
-                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">
-                    {summaryResult.model_used}
-                  </span>
-                  {summaryResult.strategy && (
-                    <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-semibold ${
-                      summaryResult.strategy === 'map_reduce'
-                        ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
-                        : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                    }`}>
-                      {summaryResult.strategy === 'map_reduce'
-                        ? `Map-Reduce (${summaryResult.total_chunks || 2} Chunks)`
-                        : 'Single Shot'}
+          <AnimatePresence mode="wait">
+            {summaryResult && (
+              <motion.div 
+                key="summary-result"
+                initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="rounded-xl bg-zinc-900/60 border border-amber-500/30 p-6 space-y-4 shadow-xl shadow-black/40"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/5">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="font-semibold text-white">AI Analysis Output</span>
+                    <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">
+                      {summaryResult.model_used}
                     </span>
-                  )}
-                  <span className="flex items-center space-x-1 text-zinc-400 text-[11px]">
-                    <Clock className="w-3 h-3 text-amber-400" />
-                    <span>{(summaryResult.processing_time_ms / 1000).toFixed(2)}s</span>
-                  </span>
+                    {summaryResult.strategy && (
+                      <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-semibold ${
+                        summaryResult.strategy === 'map_reduce'
+                          ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
+                          : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                      }`}>
+                        {summaryResult.strategy === 'map_reduce'
+                          ? `Map-Reduce (${summaryResult.total_chunks || 2} Chunks)`
+                          : 'Single Shot'}
+                      </span>
+                    )}
+                    <span className="flex items-center space-x-1 text-zinc-400 text-[11px]">
+                      <Clock className="w-3 h-3 text-amber-400" />
+                      <span>{(summaryResult.processing_time_ms / 1000).toFixed(2)}s</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <motion.button
+                      onClick={handleCopy}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-700 transition-colors cursor-pointer"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copied ? 'Copied!' : 'Copy'}</span>
+                    </motion.button>
+
+                    <motion.button
+                      onClick={handleDownload}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-700 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Save .md</span>
+                    </motion.button>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-700 transition-colors cursor-pointer"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copied ? 'Copied!' : 'Copy'}</span>
-                  </button>
-
-                  <button
-                    onClick={handleDownload}
-                    className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-700 transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Save .md</span>
-                  </button>
+                {/* Local Privacy & Latency Notice */}
+                <div className="text-[11px] text-zinc-500 flex items-center justify-between">
+                  <span>🔒 Processed strictly locally via Ollama. No data left this machine.</span>
+                  <span className="hidden sm:inline text-zinc-600">Local inference speed varies with GPU/CPU hardware.</span>
                 </div>
-              </div>
 
-              {/* Local Privacy & Latency Notice */}
-              <div className="text-[11px] text-zinc-500 flex items-center justify-between">
-                <span>🔒 Processed strictly locally via Ollama. No data left this machine.</span>
-                <span className="hidden sm:inline text-zinc-600">Local inference speed varies with GPU/CPU hardware.</span>
-              </div>
+                {/* Rendered Summary Text */}
+                <div className="text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans bg-black/20 p-4 rounded-lg border border-white/5">
+                  {summaryResult.summary}
+                </div>
+              </motion.div>
+            )}
 
-              {/* Rendered Summary Text */}
-              <div className="text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans bg-black/20 p-4 rounded-lg border border-white/5">
-                {summaryResult.summary}
-              </div>
-            </div>
-          )}
+            {/* Active Progress State */}
+            {isSummarizing && (
+              <motion.div 
+                key="summarizing-progress"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="rounded-xl bg-zinc-900/60 border border-amber-500/30 p-8 text-center space-y-3 shadow-xl shadow-black/40"
+              >
+                <Loader2 className="w-8 h-8 mx-auto animate-spin text-amber-400" />
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-white">Local AI Synthesis in Progress...</h3>
+                  <p className="text-xs text-zinc-400 max-w-md mx-auto">
+                    Running entirely on local CPU/GPU hardware via Ollama using model <span className="text-amber-300 font-mono">{selectedModel || aiStatus?.current_model}</span>. Zero bytes leave your workstation.
+                  </p>
+                  <p className="text-[11px] text-zinc-500">
+                    Depending on document length and system hardware, local inference typically takes 15–75 seconds.
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
-          {/* Active Progress State */}
-          {isSummarizing && (
-            <div className="rounded-xl bg-zinc-900/60 border border-amber-500/30 p-8 text-center space-y-3 shadow-xl shadow-black/40">
-              <Loader2 className="w-8 h-8 mx-auto animate-spin text-amber-400" />
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-white">Local AI Synthesis in Progress...</h3>
-                <p className="text-xs text-zinc-400 max-w-md mx-auto">
-                  Running entirely on local CPU/GPU hardware via Ollama using model <span className="text-amber-300 font-mono">{selectedModel || aiStatus?.current_model}</span>. Zero bytes leave your workstation.
-                </p>
-                <p className="text-[11px] text-zinc-500">
-                  Depending on document length and system hardware, local inference typically takes 15–75 seconds.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Empty state when no analysis yet */}
-          {!summaryResult && !isSummarizing && (
-            <div className="rounded-xl bg-zinc-950/40 border border-dashed border-zinc-800 p-12 text-center text-zinc-500 text-xs">
-              <FileText className="w-8 h-8 mx-auto text-zinc-600 mb-2" />
-              <p>Upload a document on the left and click "Generate Insights" to preview the synthesized output.</p>
-            </div>
-          )}
+            {/* Empty state when no analysis yet */}
+            {!summaryResult && !isSummarizing && (
+              <motion.div 
+                key="empty-state"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-xl bg-zinc-950/40 border border-dashed border-zinc-800 p-12 text-center text-zinc-500 text-xs"
+              >
+                <FileText className="w-8 h-8 mx-auto text-zinc-600 mb-2" />
+                <p>Upload a document on the left and click "Generate Insights" to preview the synthesized output.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { DocumentAssistant } from './components/DocumentAssistant';
@@ -53,20 +54,30 @@ export function App() {
         aiStatus={aiStatus}
       />
 
-      {/* Main Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentTab === 'dashboard' && (
-          <Dashboard onNavigate={setCurrentTab} aiStatus={aiStatus} />
-        )}
-        {currentTab === 'documents' && (
-          <DocumentAssistant aiStatus={aiStatus} />
-        )}
-        {currentTab === 'organizer' && (
-          <FileOrganizer />
-        )}
-        {currentTab === 'settings' && (
-          <SettingsView aiStatus={aiStatus} onRefreshStatus={loadStatus} />
-        )}
+      {/* Main Body with AnimatePresence */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTab}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {currentTab === 'dashboard' && (
+              <Dashboard onNavigate={setCurrentTab} aiStatus={aiStatus} />
+            )}
+            {currentTab === 'documents' && (
+              <DocumentAssistant aiStatus={aiStatus} />
+            )}
+            {currentTab === 'organizer' && (
+              <FileOrganizer />
+            )}
+            {currentTab === 'settings' && (
+              <SettingsView aiStatus={aiStatus} onRefreshStatus={loadStatus} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Minimal Footer */}

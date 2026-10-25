@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
   Play, 
@@ -413,14 +414,26 @@ export const FileOrganizer: React.FC = () => {
       )}
 
       {/* History & Undo Drawer/Modal */}
-      {showHistory && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl max-w-3xl w-full p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/5">
-              <div className="flex items-center space-x-2">
-                <History className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-white">Persistent SQLite Operation History & Safe Undo</h3>
-              </div>
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: 'spring' as const, damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 rounded-2xl max-w-3xl w-full p-6 space-y-5 shadow-2xl"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                <div className="flex items-center space-x-2">
+                  <History className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-bold text-white">Persistent SQLite Operation History & Safe Undo</h3>
+                </div>
               <button
                 onClick={() => {
                   setShowHistory(false);
@@ -619,9 +632,10 @@ export const FileOrganizer: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
